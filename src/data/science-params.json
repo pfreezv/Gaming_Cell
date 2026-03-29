@@ -1,0 +1,267 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "extracted_from": "simulador-prebiotico-v4-2.html",
+    "description": "All numerical parameters for PRIMORDIAL simulation engine. Edit here — never hardcode in game logic.",
+    "scientific_validator": "pending",
+    "last_reviewed": "2026-03-28"
+  },
+
+  "environment": {
+    "_note": "World geometry and initial conditions",
+    "canvas_width": 730,
+    "canvas_height": 490,
+    "atm_height_ratio": 0.27,
+    "ocean_height_ratio": 0.80,
+    "interface_band_px": 26,
+    "default_temp": 55,
+    "default_ph": 7.0,
+    "molecule_cap": 180,
+    "stars_count": 50
+  },
+
+  "molecules": {
+    "_note": "Per-molecule physical properties. r = render radius in px. mass in g/mol (real).",
+    "CH4":     { "label":"CH₄",  "r":6,  "mass":16,  "phase":"gas",    "energy":2, "shape":"circle",   "color":"#86efac", "desc":"Methane" },
+    "NH3":     { "label":"NH₃",  "r":6,  "mass":17,  "phase":"gas",    "energy":2, "shape":"circle",   "color":"#fdba74", "desc":"Ammonia" },
+    "CO2":     { "label":"CO₂",  "r":6,  "mass":44,  "phase":"gas",    "energy":1, "shape":"circle",   "color":"#94a3b8", "desc":"Carbon dioxide" },
+    "H2S":     { "label":"H₂S",  "r":6,  "mass":34,  "phase":"gas",    "energy":2, "shape":"circle",   "color":"#fde68a", "desc":"Hydrogen sulfide" },
+    "HCN":     { "label":"HCN",  "r":7,  "mass":27,  "phase":"gas",    "energy":3, "shape":"circle",   "color":"#f9a8d4", "desc":"Hydrogen cyanide" },
+    "FORMAMID":{ "label":"FMD",  "r":7,  "mass":45,  "phase":"gas",    "energy":3, "shape":"circle",   "color":"#fcd34d", "desc":"Formamidine - purine precursor" },
+    "H2O":     { "label":"H₂O",  "r":5,  "mass":18,  "phase":"liquid", "energy":1, "shape":"circle",   "color":"#60a5fa", "desc":"Water" },
+    "AMINO":   { "label":"AA",   "r":9,  "mass":110, "phase":"liquid", "energy":5, "shape":"amino",    "color":"#a78bfa", "desc":"Amino acid (subtyped)" },
+    "BASE":    { "label":"BAS",  "r":8,  "mass":120, "phase":"liquid", "energy":4, "shape":"hexagon",  "color":"#67e8f9", "desc":"Nitrogenous base (subtyped)" },
+    "RIBOSA":  { "label":"RIB",  "r":8,  "mass":150, "phase":"liquid", "energy":3, "shape":"hexagon",  "color":"#c4b5fd", "desc":"Ribose sugar" },
+    "NUCLEOSID":{"label":"NSI",  "r":9,  "mass":270, "phase":"liquid", "energy":4, "shape":"hexagon",  "color":"#a5b4fc", "desc":"Nucleoside = Base + Ribose" },
+    "NMP":     { "label":"NMP",  "r":10, "mass":370, "phase":"liquid", "energy":6, "shape":"nmp",      "color":"#818cf8", "desc":"Nucleotide monophosphate" },
+    "LIPID":   { "label":"LIP",  "r":10, "mass":280, "phase":"liquid", "energy":4, "shape":"circle",   "color":"#fbbf24", "desc":"Lipid / fatty acid" },
+    "PEPTID":  { "label":"PEP",  "r":11, "mass":220, "phase":"liquid", "energy":7, "shape":"chain",    "color":"#e879f9", "desc":"Short peptide chain" },
+    "RNA":     { "label":"ARN",  "r":13, "mass":500, "phase":"liquid", "energy":9, "shape":"rna",      "color":"#34d399", "desc":"Primitive RNA chain" },
+    "ATP":     { "label":"ATP",  "r":11, "mass":507, "phase":"liquid", "energy":8, "shape":"atp",      "color":"#f97316", "desc":"Adenosine triphosphate - energy currency" },
+    "FE2":     { "label":"Fe²⁺", "r":8,  "mass":56,  "phase":"solid",  "energy":3, "shape":"square",   "color":"#fb923c", "desc":"Ferrous iron - mineral catalyst" },
+    "PO4":     { "label":"PO₄",  "r":8,  "mass":95,  "phase":"solid",  "energy":3, "shape":"triangle", "color":"#4ade80", "desc":"Phosphate - RNA backbone" }
+  },
+
+  "amino_acids": {
+    "_note": "8 prebiotically plausible amino acids. Ref: Miller 1953, Kvenvolden 1970, Pizzarello 2006",
+    "_source": "Abundance weights reflect realistic prebiotic proportions",
+    "GLY": { "code":"Gly", "color":"#94a3b8", "charge":0,  "hydrophobicity":0.10, "flexibility":1.0, "special":"pivot",    "mass":75,  "abundance_weight":40, "origin":"Miller-Urey" },
+    "ALA": { "code":"Ala", "color":"#86efac", "charge":0,  "hydrophobicity":0.42, "flexibility":0.7, "special":"helix",    "mass":89,  "abundance_weight":25, "origin":"Miller-Urey" },
+    "ASP": { "code":"Asp", "color":"#f87171", "charge":-1, "hydrophobicity":0.08, "flexibility":0.5, "special":"acid_cat", "mass":133, "abundance_weight":10, "origin":"Miller-Urey" },
+    "GLU": { "code":"Glu", "color":"#fb7185", "charge":-1, "hydrophobicity":0.10, "flexibility":0.45,"special":"metal",    "mass":147, "abundance_weight":8,  "origin":"Miller-Urey" },
+    "VAL": { "code":"Val", "color":"#4ade80", "charge":0,  "hydrophobicity":0.76, "flexibility":0.4, "special":"hydcore",  "mass":117, "abundance_weight":7,  "origin":"Miller-Urey" },
+    "SER": { "code":"Ser", "color":"#60a5fa", "charge":0,  "hydrophobicity":0.05, "flexibility":0.75,"special":"phospho",  "mass":105, "abundance_weight":5,  "origin":"Murchison" },
+    "CYS": { "code":"Cys", "color":"#fde68a", "charge":0,  "hydrophobicity":0.25, "flexibility":0.5, "special":"disulf",   "mass":121, "abundance_weight":3,  "origin":"chemical synthesis" },
+    "LYS": { "code":"Lys", "color":"#c084fc", "charge":1,  "hydrophobicity":0.05, "flexibility":0.35,"special":"rna_bind", "mass":146, "abundance_weight":2,  "origin":"chemical synthesis" }
+  },
+
+  "nucleotide_bases": {
+    "_note": "5 nitrogenous bases. Ref: Oró 1961, Sutherland 2009",
+    "A": { "letter":"A", "color":"#c084fc", "type":"purine",     "pair_rna":"U", "pair_dna":"T", "h_bonds":2, "can_form_atp":true,  "stability":0.72, "reactivity":0.88, "synthesis":"5x HCN (Oró reaction)" },
+    "G": { "letter":"G", "color":"#818cf8", "type":"purine",     "pair_rna":"C", "pair_dna":"C", "h_bonds":3, "thermostable":true,  "stability":0.85, "reactivity":0.75, "synthesis":"HCN + formamidine" },
+    "C": { "letter":"C", "color":"#67e8f9", "type":"pyrimidine", "pair_rna":"G", "pair_dna":"G", "h_bonds":3, "deaminates_to":"U",  "stability":0.60, "reactivity":0.78, "synthesis":"cyanoacetylene + urea" },
+    "U": { "letter":"U", "color":"#34d399", "type":"pyrimidine", "pair_rna":"A", "pair_dna":null,"h_bonds":2, "only_rna":true,      "stability":0.68, "reactivity":0.70, "synthesis":"urea + maleic acid" },
+    "T": { "letter":"T", "color":"#fbbf24", "type":"pyrimidine", "pair_rna":null,"pair_dna":"A", "h_bonds":2, "only_dna":true,      "stability":0.90, "reactivity":0.60, "synthesis":"methylation of U (late, requires SAM)" }
+  },
+
+  "physics": {
+    "_note": "Movement parameters. Maxwell-Boltzmann: speed ∝ sqrt(reference_mass / molecule_mass). CO2 (44) as reference.",
+    "reference_mass_for_mb": 44,
+    "base_speed_divisor": 55,
+    "min_speed": 0.4,
+    "gas_vx_range":   [-1.4, 1.4],
+    "gas_vy_range":   [-1.4, 1.4],
+    "liquid_vx_range":[-1.0, 1.0],
+    "liquid_vy_range":[-1.0, 1.0],
+    "solid_gravity_increment": 0.05,
+    "solid_max_vy": 1.2,
+    "solid_x_damping": 0.2,
+    "liquid_brownian_delta": 0.06,
+    "gas_brownian_delta": 0.08,
+    "ocean_wall_bounce_boost": 0.1
+  },
+
+  "dissolution": {
+    "_note": "Rates at which gases dissolve into ocean. Ref: Henry's Law approximations.",
+    "_science": "Higher rate = more soluble. HCN is very soluble (polar, reactive). CH4 barely dissolves (nonpolar).",
+    "gas_rates": {
+      "HCN":      0.014,
+      "CO2":      0.009,
+      "H2S":      0.009,
+      "NH3":      0.007,
+      "FORMAMID": 0.010,
+      "CH4":      0.003
+    },
+    "solid_rates": {
+      "FE2": 0.001,
+      "PO4": 0.001
+    },
+    "liquid_caps": {
+      "_note": "Max dissolved copies of each type in ocean simultaneously",
+      "HCN":      10,
+      "NH3":      8,
+      "CO2":      8,
+      "H2S":      8,
+      "CH4":      5,
+      "FORMAMID": 8,
+      "FE2":      5,
+      "PO4":      5
+    },
+    "temp_boost_divisor": 100,
+    "surface_zone_ratio": 0.60
+  },
+
+  "reactions": {
+    "_note": "Prebiotic reaction table. chance = probability per collision check per tick. Ref: Miller 1953, Oró 1961, Ferris 2002.",
+    "_science": "All reactions are scientifically documented. Parameters are simplified for gameplay while preserving relative rates.",
+    "collision_extra_radius": 18,
+    "max_reactions_per_tick": 3,
+    "temp_boost_divisor": 120,
+    "uv_boost": 0.8,
+    "ph_boost_threshold_high": 6.0,
+    "ph_boost_high": 1.2,
+    "ph_boost_threshold_mid": 5.0,
+    "ph_boost_mid": 0.9,
+    "ph_boost_low": 0.6,
+    "table": {
+      "CH4_NH3_to_HCN":        { "reactants":["CH4","NH3"],       "product":"HCN",       "chance":0.015, "min_temp":40, "uv_only":true,  "ref":"Miller & Urey 1953" },
+      "HCN_HCN_to_FORMAMID":   { "reactants":["HCN","HCN"],       "product":"FORMAMID",  "chance":0.012, "min_temp":40, "uv_only":false, "ref":"Oró 1961 - purine precursor" },
+      "HCN_H2O_to_AMINO":      { "reactants":["HCN","H2O"],       "product":"AMINO",     "chance":0.012, "min_temp":30, "uv_only":false, "ref":"Strecker synthesis" },
+      "HCN_H2O_to_BASE":       { "reactants":["HCN","H2O"],       "product":"BASE",      "chance":0.010, "min_temp":25, "uv_only":false, "ref":"Pyrimidine synthesis" },
+      "NH3_H2O_to_AMINO":      { "reactants":["NH3","H2O"],       "product":"AMINO",     "chance":0.008, "min_temp":35, "uv_only":false, "ref":"Miller 1953" },
+      "CO2_H2S_to_LIPID":      { "reactants":["CO2","H2S"],       "product":"LIPID",     "chance":0.009, "min_temp":20, "uv_only":false, "ref":"Hydrothermal vent chemistry" },
+      "FORMAMID_H2O_to_BASE_A":{ "reactants":["FORMAMID","H2O"],  "product":"BASE_A",    "chance":0.010, "min_temp":35, "uv_only":false, "ref":"Adenine synthesis pathway" },
+      "FORMAMID_HCN_to_BASE_G":{ "reactants":["FORMAMID","HCN"],  "product":"BASE_G",    "chance":0.009, "min_temp":40, "uv_only":false, "ref":"Guanine synthesis" },
+      "AMINO_AMINO_to_PEPTID":  { "reactants":["AMINO","AMINO"],   "product":"PEPTID",    "chance":0.009, "min_temp":45, "uv_only":false, "ref":"Peptide bond formation" },
+      "AMINO_PO4_to_RIBOSA":   { "reactants":["AMINO","PO4"],     "product":"RIBOSA",    "chance":0.009, "min_temp":35, "uv_only":false, "ref":"Formose reaction variant" },
+      "BASE_RIBOSA_to_NUCLEOSID":{ "reactants":["BASE","RIBOSA"],  "product":"NUCLEOSID", "chance":0.010, "min_temp":40, "uv_only":false, "ref":"N-glycosidic bond formation" },
+      "NUCLEOSID_PO4_to_NMP":  { "reactants":["NUCLEOSID","PO4"], "product":"NMP",       "chance":0.010, "min_temp":35, "uv_only":false, "ref":"Ferris 2002 - clay catalysis" },
+      "NMP_NMP_to_RNA":        { "reactants":["NMP","NMP"],       "product":"RNA",       "chance":0.008, "min_temp":50, "uv_only":false, "ref":"Phosphodiester bond formation" },
+      "NMP_PO4_to_ATP":        { "reactants":["NMP","PO4"],       "product":"ATP",       "chance":0.008, "min_temp":45, "uv_only":false, "ref":"ATP synthesis - energy storage" },
+      "AMINO_FE2_catalysis":   { "reactants":["AMINO","FE2"],     "product":"AMINO",     "chance":0.005, "min_temp":30, "uv_only":false, "ref":"Iron catalysis of amino acid reactions" }
+    }
+  },
+
+  "init_counts": {
+    "_note": "Starting molecule counts for a new game session",
+    "H2O":      28,
+    "CH4":      12,
+    "NH3":      10,
+    "CO2":      8,
+    "H2S":      8,
+    "HCN":      0,
+    "FORMAMID": 0,
+    "AMINO":    0,
+    "BASE":     0,
+    "RIBOSA":   0,
+    "NUCLEOSID":0,
+    "NMP":      0,
+    "LIPID":    0,
+    "PEPTID":   0,
+    "RNA":      0,
+    "ATP":      0,
+    "FE2":      3,
+    "PO4":      3
+  },
+
+  "rna": {
+    "_note": "RNA chain behavior parameters",
+    "ribozyme_min_length": 12,
+    "ribozyme_min_gc_percent": 60,
+    "degradation_rate_free": 0.015,
+    "degradation_check_every_ticks": 80,
+    "mutation_rate_C_to_U": 0.0003,
+    "mutation_check_every_ticks": 60,
+    "gc_thermo_stable_threshold": 60,
+    "gc_very_stable_threshold": 70
+  },
+
+  "vesicle": {
+    "_note": "Vesicle formation and behavior. Ref: Deamer 1985, Szostak 2008",
+    "micelle_min_lipids": 6,
+    "micelle_detection_radius": 60,
+    "vesicle_min_lipids": 10,
+    "vesicle_detection_radius": 80,
+    "protocell_trigger": "rna_inside",
+    "division_lipid_threshold": 20,
+    "speed_multiplier": 0.15,
+    "brownian_delta": 0.03,
+    "fusion_temp_threshold": 60,
+    "fusion_size_ratio_max": 3.0,
+    "reaction_boost_vesicle": 3.0,
+    "reaction_boost_protocell": 10.0,
+    "permeability": {
+      "_note": "Probability per tick that molecule enters vesicle. 0=impermeable, 1=free",
+      "H2O":      1.0,
+      "HCN":      0.8,
+      "NH3":      0.8,
+      "AMINO":    0.04,
+      "NUCLEOSID":0.03,
+      "NMP":      0.02,
+      "ATP":      0.02,
+      "RNA":      0.0,
+      "LIPID":    1.0,
+      "FE2":      0.01,
+      "PO4":      0.01
+    },
+    "detection_every_ticks": 30,
+    "max_simultaneous": 5
+  },
+
+  "lineage": {
+    "_note": "Player cell genealogy tree parameters",
+    "max_generations_displayed": 5,
+    "ai_pilot_efficiency": 0.6,
+    "capability_unlock_triggers": {
+      "atp_synthesis":   { "requires": "first_division" },
+      "basic_peptides":  { "requires": "first_division" },
+      "ribozyme":        { "requires": "rna_length_12" },
+      "membrane_cys":    { "requires": "cys_internal" },
+      "proto_ribosome":  { "requires": "generation_3" },
+      "primitive_dna":   { "requires": "generation_4" }
+    }
+  },
+
+  "bots": {
+    "_note": "AI rival cell parameters",
+    "count": 3,
+    "learning_layer_1_from": "start",
+    "learning_layer_2_from": "generation_1",
+    "learning_layer_3_from": "generation_3",
+    "imitation_variance": 0.20,
+    "archetypes": {
+      "ACCELERATOR": { "division_urgency":0.95, "stability_weight":0.20, "aggression":0.85 },
+      "FORTRESS":    { "division_urgency":0.18, "stability_weight":0.97, "aggression":0.15 },
+      "PARASITE":    { "fusion_urgency":0.95,   "synthesis_weight":0.08, "speed":0.82 },
+      "ALCHEMIST":   { "atp_priority":0.95,     "efficiency":0.90,       "division_urgency":0.55 }
+    }
+  },
+
+  "ui": {
+    "_note": "UI and display parameters",
+    "log_max_entries": 8,
+    "ui_update_every_ticks": 1,
+    "vent_duration_ticks": 240,
+    "uv_duration_ms": 5000,
+    "vent_h2s_burst": 4,
+    "vent_fe2_burst": 2,
+    "vent_temp_boost": 12,
+    "flash_duration_ticks": 25
+  },
+
+  "scientific_references": {
+    "Miller_Urey_1953":    "Miller, S.L. (1953). A Production of Amino Acids Under Possible Primitive Earth Conditions. Science, 117(3046), 528-529.",
+    "Oro_1961":            "Oró, J. (1961). Mechanism of synthesis of adenine from hydrogen cyanide under possible primitive earth conditions. Nature, 191, 1193-1194.",
+    "Gilbert_1986":        "Gilbert, W. (1986). Origin of life: The RNA world. Nature, 319, 618.",
+    "Cech_1989":           "Cech, T.R. (1989). Nobel Lecture: RNA as an enzyme.",
+    "Deamer_1985":         "Deamer, D.W., & Barchfeld, G.L. (1982). Encapsulation of macromolecules by lipid vesicles.",
+    "Szostak_2008":        "Szostak, J.W. (2008). Nobel Lecture: The origin of life and the origin of cellular life.",
+    "Ferris_2002":         "Ferris, J.P. (2002). Montmorillonite catalysis of RNA oligomer formation. Origins of Life, 32, 311-332.",
+    "Russell_1997":        "Russell, M.J., & Hall, A.J. (1997). The emergence of life from iron monosulphide bubbles. J. Geological Society.",
+    "Lane_Martin_2012":    "Lane, N., & Martin, W.F. (2012). The origin of membrane bioenergetics. Cell, 151(7), 1406-1416.",
+    "Mulkidjanian_2012":   "Mulkidjanian, A.Y. et al. (2012). Origin of first cells at terrestrial, anoxic geothermal fields. PNAS.",
+    "Sutherland_2009":     "Sutherland, J.D. (2009). Synthesis of activated pyrimidine ribonucleotides in prebiotically plausible conditions. Nature.",
+    "Kvenvolden_1970":     "Kvenvolden, K. et al. (1970). Evidence for extraterrestrial amino-acids in the Murchison meteorite. Nature.",
+    "Weiss_2016":          "Weiss, M.C. et al. (2016). The physiology and habitat of the last universal common ancestor. Nature Microbiology."
+  }
+}
