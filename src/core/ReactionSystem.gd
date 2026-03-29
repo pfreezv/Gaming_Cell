@@ -94,7 +94,11 @@ func _try_reaction(r: Dictionary, rid: String, data: Dictionary) -> bool:
 		ph_mult = _config.get("ph_boost_low", 0.6)
 
 	var uv_mult  := 1.0 + (_config.get("uv_boost", 0.8) if GameState.uv_active else 0.0)
-	var final_chance: float = (base_chance + temp_boost) * ph_mult * uv_mult
+
+	# Posición calculada antes del roll para aplicar boost de compartimento
+	var pos       := _midpoint_of(data.a_uid, data.b_uid)
+	var comp_boost := CompartmentSystem.get_boost_at(pos)
+	var final_chance: float = (base_chance + temp_boost) * ph_mult * uv_mult * comp_boost
 
 	if rng.randf() > final_chance:
 		return false
@@ -104,8 +108,6 @@ func _try_reaction(r: Dictionary, rid: String, data: Dictionary) -> bool:
 	if product.is_empty():
 		return false
 
-	# Posición y energía heredadas
-	var pos      := _midpoint_of(data.a_uid, data.b_uid)
 	var inherited := (_energy_of(data.a_uid) + _energy_of(data.b_uid)) * 0.5
 
 	MoleculeSystem.consume_pair(data.a_uid, data.b_uid)

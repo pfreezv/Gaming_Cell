@@ -69,6 +69,7 @@ func _load_science_params() -> void:
 	MoleculeSystem._load_config()
 	ReactionSystem._load_config()
 	EnvironmentSystem._load_config()
+	CompartmentSystem._load_config()
 	print("[Main] science-params.json cargado OK")
 
 func _init_molecules() -> void:
@@ -89,6 +90,7 @@ func _restart() -> void:
 	GameState.reset_state()
 	MoleculeSystem.reset_system()
 	EnvironmentSystem.reset_system()
+	CompartmentSystem.reset_system()
 	_load_science_params()
 	_init_molecules()
 	_sync_sliders()
@@ -103,6 +105,7 @@ func _run_tick(delta: float) -> void:
 	GameState.advance_time(delta)
 	MoleculeSystem.tick(delta)
 	EnvironmentSystem.tick()
+	CompartmentSystem.tick()
 	_update_debug_panel()
 
 # ──────────────────────────────────────────────
@@ -232,6 +235,11 @@ func _update_debug_panel() -> void:
 	lines.append("Moléculas activas: %d" % snap.total_molecules)
 	for t in snap.by_type:
 		lines.append("  %-12s %d" % [t, snap.by_type[t]])
+	lines.append("─────────────────────────────────────────────")
+	var comp_sum := CompartmentSystem.get_summary()
+	lines.append("Compartimentos: micelas %d  vesículas %d  protocélulas %d" % [
+		comp_sum.micelles, comp_sum.vesicles, comp_sum.protocells
+	])
 	lines.append("─────────────────────────────────────────────")
 	lines.append("Reacciones : %d  |  Degradadas: %d" % [
 		GameState.telemetry.total_reactions,
