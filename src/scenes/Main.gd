@@ -14,6 +14,7 @@ const TICK_INTERVAL := 0.1  ## 10 ticks por segundo
 var _tick_accumulator: float = 0.0
 var _debug_label:  Label
 var _event_label:  Label
+var _renderer: SimRenderer
 
 ## Referencias a sliders para sincronizar display
 var _slider_temp: HSlider
@@ -27,6 +28,7 @@ var _slider_hyd:  HSlider
 func _ready() -> void:
 	_load_science_params()
 	_init_molecules()
+	_setup_renderer()
 	_setup_ui()
 	print("[Main] Bucle iniciado. SPACE = pausa.")
 
@@ -50,6 +52,11 @@ func _input(event: InputEvent) -> void:
 # ──────────────────────────────────────────────
 # INICIALIZACIÓN
 # ──────────────────────────────────────────────
+
+func _setup_renderer() -> void:
+	_renderer = SimRenderer.new()
+	add_child(_renderer)
+	_renderer._load_visuals()
 
 func _load_science_params() -> void:
 	var file := FileAccess.open(SCIENCE_PARAMS_PATH, FileAccess.READ)
