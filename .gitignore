@@ -1,0 +1,43 @@
+# Godot 4
+.godot/
+*.uid
+
+# Godot export
+export/
+*.apk
+*.aab
+*.ipa
+
+# OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs / cache
+*.log
+.cache/
+
+# Python helpers (if used for tooling)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node / build tools (if docs/site tooling appears)
+node_modules/
+dist/
+
+# Temp artifacts
+*.tmp
+*.bak
