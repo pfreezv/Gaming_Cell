@@ -63,6 +63,7 @@ func _load_science_params() -> void:
 
 	GameState.science_params = json.get_data()
 	MoleculeSystem._load_config()
+	ReactionSystem._load_config()
 	print("[Main] science-params.json cargado OK")
 
 func _init_molecules() -> void:
@@ -108,6 +109,7 @@ func _setup_debug_ui() -> void:
 	panel.add_child(_debug_label)
 
 func _run_tick(delta: float) -> void:
+	ReactionSystem.reset_tick()
 	GameState.advance_time(delta)
 	MoleculeSystem.tick(delta)
 	_update_debug_panel()

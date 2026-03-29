@@ -25,6 +25,7 @@ var mineral_catalysis: float = 0.2
 
 # Eventos globales activos
 var active_events: Array = []
+var uv_active: bool = false
 
 # ======================================================
 # POOLS / MOLÉCULAS / RECURSOS
@@ -91,6 +92,7 @@ func reset_state() -> void:
 	energy_flux = 0.4
 	mineral_catalysis = 0.2
 
+	uv_active = false
 	active_events.clear()
 	molecules.clear()
 	molecule_instances.clear()
