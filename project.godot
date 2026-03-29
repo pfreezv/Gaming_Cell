@@ -18,6 +18,7 @@ MoleculeSystem="*res://src/core/MoleculeSystem.gd"
 ReactionSystem="*res://src/core/ReactionSystem.gd"
 EnvironmentSystem="*res://src/core/EnvironmentSystem.gd"
 CompartmentSystem="*res://src/core/CompartmentSystem.gd"
+ProgressSystem="*res://src/core/ProgressSystem.gd"
 
 [rendering]
 

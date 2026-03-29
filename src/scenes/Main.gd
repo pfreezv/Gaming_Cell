@@ -70,6 +70,7 @@ func _load_science_params() -> void:
 	ReactionSystem._load_config()
 	EnvironmentSystem._load_config()
 	CompartmentSystem._load_config()
+	ProgressSystem._load_config()
 	print("[Main] science-params.json cargado OK")
 
 func _init_molecules() -> void:
@@ -91,6 +92,7 @@ func _restart() -> void:
 	MoleculeSystem.reset_system()
 	EnvironmentSystem.reset_system()
 	CompartmentSystem.reset_system()
+	ProgressSystem.reset_system()
 	_load_science_params()
 	_init_molecules()
 	_sync_sliders()
@@ -106,6 +108,7 @@ func _run_tick(delta: float) -> void:
 	MoleculeSystem.tick(delta)
 	EnvironmentSystem.tick()
 	CompartmentSystem.tick()
+	ProgressSystem.tick()
 	_update_debug_panel()
 
 # ──────────────────────────────────────────────
@@ -245,7 +248,19 @@ func _update_debug_panel() -> void:
 		GameState.telemetry.total_reactions,
 		GameState.telemetry.degraded_molecules
 	])
+	lines.append("─────────────────────────────────────────────")
+	lines.append("PROGRESO  %d%%  %s" % [
+		ProgressSystem.get_progress_percent(),
+		_progress_bar(ProgressSystem.get_progress_percent())
+	])
+	for line in ProgressSystem.get_status_lines():
+		lines.append(line)
+
 	_debug_label.text = "\n".join(lines)
+
+func _progress_bar(pct: int) -> String:
+	var filled := int(pct / 5)
+	return "[" + "█".repeat(filled) + "░".repeat(20 - filled) + "]"
 
 	## Indicadores de eventos activos
 	var events: PackedStringArray = []
