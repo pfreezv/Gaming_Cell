@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sim.v1",
+  "title": "PRIMORDIAL telemetry contract",
+  "description": "Contrato mínimo para snapshots y eventos de simulación.",
+  "type": "object",
+  "required": ["schema_version", "run_id", "tick"],
+  "properties": {
+    "schema_version": { "const": "sim.v1" },
+    "run_id": { "type": "string", "minLength": 3 },
+    "tick": { "type": "integer", "minimum": 0 },
+    "time_sec": { "type": "number", "minimum": 0 },
+    "event_type": { "type": "string" },
+    "severity": { "type": "string", "enum": ["info", "warning", "critical"] },
+    "payload": { "type": "object" },
+    "environment": { "type": "object" },
+    "molecules": { "type": "object" },
+    "reactions": { "type": "object" },
+    "progress": { "type": "object" },
+    "extra": { "type": "object" }
+  }
+}

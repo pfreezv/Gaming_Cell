@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRIMORDIAL Telemetry Viewer</title>
+  <style>
+    body { font-family: Inter, Arial, sans-serif; margin: 0; background: #111827; color: #e5e7eb; }
+    .wrap { max-width: 1000px; margin: 24px auto; padding: 0 16px; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .card { background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 12px; }
+    .label { font-size: 12px; opacity: .8; }
+    .value { font-size: 20px; font-weight: 700; }
+    .panel { margin-top: 16px; }
+    textarea { width: 100%; min-height: 110px; background: #0b1220; color: #d1d5db; border: 1px solid #374151; border-radius: 8px; padding: 8px; }
+    button { margin: 8px 8px 0 0; padding: 8px 12px; border-radius: 8px; border: 1px solid #4b5563; background: #2563eb; color: white; cursor: pointer; }
+    ul { padding-left: 18px; }
+    .bars li { list-style: none; margin: 6px 0; }
+    .bar { display: inline-block; height: 12px; background: #10b981; border-radius: 3px; margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>PRIMORDIAL · Telemetry Viewer (MVP)</h1>
+    <div class="grid" id="kpis"></div>
+
+    <div class="panel card">
+      <h3>Moléculas por tipo</h3>
+      <ul id="molecule-bars" class="bars"></ul>
+    </div>
+
+    <div class="panel card">
+      <h3>Eventos recientes</h3>
+      <ul id="event-list"></ul>
+    </div>
+
+    <div class="panel card">
+      <h3>Snapshot JSON</h3>
+      <textarea id="snapshot-input"></textarea>
+      <div>
+        <button id="load-sample">Cargar sample</button>
+        <button id="render">Renderizar</button>
+      </div>
+    </div>
+
+    <div class="panel card">
+      <h3>Events JSONL (opcional)</h3>
+      <textarea id="events-input"></textarea>
+    </div>
+  </div>
+
+  <script>
+    const sampleSnapshot = `{
+  "schema_version": "sim.v1",
+  "run_id": "run-demo-001",
+  "tick": 240,
+  "time_sec": 120,
+  "environment": {"temperature": 47.5, "ph": 7.2, "hydration": 0.62, "energy_flux": 0.48},
+  "molecules": {"total": 420, "by_type": {"WATER": 180, "AA": 92, "LIPID": 74, "NMP": 44, "MINERAL": 30}},
+  "reactions": {"candidates_last_tick": 88, "success_last_tick": 16, "success_total": 329, "failed_total": 97},
+  "progress": {"score": 0.41}
+}`;
+
+    const sampleEvents = `{"event_type":"snapshot_recorded","tick":180,"severity":"info"}\n{"event_type":"reaction_success","tick":196,"severity":"info"}\n{"event_type":"degradation_spike","tick":220,"severity":"warning"}`;
+
+    function metric(label, value) {
+      return `<div class="card"><div class="label">${label}</div><div class="value">${value}</div></div>`;
+    }
+
+    function render() {
+      let snapshot;
+      try {
+        snapshot = JSON.parse(document.getElementById('snapshot-input').value || '{}');
+      } catch {
+        alert('Snapshot JSON inválido');
+        return;
+      }
+
+      const env = snapshot.environment || {};
+      const rx = snapshot.reactions || {};
+      const mol = snapshot.molecules || {};
+      const prog = snapshot.progress || {};
+
+      document.getElementById('kpis').innerHTML = [
+        metric('Tick', snapshot.tick ?? '-'),
+        metric('Temp °C', env.temperature ?? '-'),
+        metric('Moléculas', mol.total ?? '-'),
+        metric('Progreso', prog.score ?? '-')
+      ].join('');
+
+      const byType = mol.by_type || {};
+      const max = Math.max(1, ...Object.values(byType));
+      document.getElementById('molecule-bars').innerHTML = Object.entries(byType)
+        .sort((a,b)=>b[1]-a[1])
+        .map(([k,v]) => `<li>${k}: <strong>${v}</strong><span class="bar" style="width:${(v/max)*240}px"></span></li>`)
+        .join('');
+
+      const lines = (document.getElementById('events-input').value || '').split(/\n+/).filter(Boolean);
+      const items = lines.map(line => {
+        try {
+          const e = JSON.parse(line);
+          return `<li>[tick ${e.tick ?? '-'}] <strong>${e.event_type ?? 'event'}</strong> · ${e.severity ?? 'info'}</li>`;
+        } catch {
+          return `<li>(línea inválida)</li>`;
+        }
+      });
+
+      if (!items.length) {
+        items.push(`<li>candidates_last_tick: ${rx.candidates_last_tick ?? '-'}, success_last_tick: ${rx.success_last_tick ?? '-'}</li>`);
+      }
+      document.getElementById('event-list').innerHTML = items.join('');
+    }
+
+    document.getElementById('load-sample').addEventListener('click', () => {
+      document.getElementById('snapshot-input').value = sampleSnapshot;
+      document.getElementById('events-input').value = sampleEvents;
+      render();
+    });
+
+    document.getElementById('render').addEventListener('click', render);
+    document.getElementById('load-sample').click();
+  </script>
+</body>
+</html>

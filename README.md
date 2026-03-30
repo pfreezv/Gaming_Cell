@@ -196,6 +196,8 @@ No conviene empezar por “más moléculas” si aún no hay un bucle sólido y 
 - `src/core/GameState.gd` → estado global del juego
 - `src/core/MoleculeSystem.gd` → núcleo del sistema molecular
 - `src/data/science-params.json` → parámetros científicos del modelo
+- `src/data/schema/sim-v1.json` → contrato mínimo de telemetría (`state_snapshot` y `event`)
+- `tools/telemetry-viewer.html` → visualizador web MVP para snapshots/eventos
 
 ---
 

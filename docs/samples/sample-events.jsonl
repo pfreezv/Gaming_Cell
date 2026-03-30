@@ -1,0 +1,3 @@
+{"schema_version":"sim.v1","run_id":"run-demo-001","tick":180,"time_sec":90.0,"event_type":"snapshot_recorded","severity":"info","payload":{"snapshot_path":"user://telemetry/snapshot-latest.json"}}
+{"schema_version":"sim.v1","run_id":"run-demo-001","tick":196,"time_sec":98.0,"event_type":"reaction_success","severity":"info","payload":{"reactants":["AA","NMP"],"products":["PEPTIDE_FRAGMENT"]}}
+{"schema_version":"sim.v1","run_id":"run-demo-001","tick":220,"time_sec":110.0,"event_type":"degradation_spike","severity":"warning","payload":{"degraded_molecules":12}}
