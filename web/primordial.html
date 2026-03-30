@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRIMORDIAL — Simulador Prebiótico</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0d14;color:#c8d8e8;font-family:'Courier New',monospace;display:flex;height:100vh;overflow:hidden}
+#left{width:290px;padding:8px;overflow-y:auto;border-right:1px solid #1a2a3a;flex-shrink:0;font-size:11px}
+#right{flex:1;display:flex;flex-direction:column;padding:8px}
+canvas{background:#060910;border:1px solid #1a2a3a;flex:1}
+.sec{border:1px solid #1a2a3a;padding:6px;margin:4px 0;border-radius:3px}
+.sec-title{color:#4a8ab8;font-weight:bold;margin-bottom:4px}
+.row{display:flex;justify-content:space-between;margin:1px 0}
+.slider-g{margin:5px 0}
+.slider-g label{display:flex;justify-content:space-between;color:#6a8aa8}
+input[type=range]{width:100%;accent-color:#4a8ab8;margin-top:2px}
+button{background:#1a2a3a;color:#88c0e0;border:1px solid #2a4a5a;padding:5px 12px;cursor:pointer;margin:2px;border-radius:3px;font-family:inherit;font-size:11px}
+button:hover{background:#2a4a5a}
+button:active{background:#3a5a6a}
+button.active{background:#3a2a1a;border-color:#f0a040;color:#f0c060}
+.milestone{margin:2px 0}
+.milestone.done{color:#4ae080}
+.milestone.pending{color:#304050}
+.prog-bg{background:#1a2a3a;height:8px;border-radius:4px;margin:4px 0}
+.prog-fill{background:linear-gradient(90deg,#2a8a4a,#4ae080);height:8px;border-radius:4px;transition:width .3s}
+.event-ind{color:#f0c040;min-height:14px;margin:2px 0}
+#log{font-size:10px;color:#5a7a8a;max-height:80px;overflow-y:auto;margin-top:4px}
+.log-entry{margin:1px 0}
+</style>
+</head>
+<body>
+<div id="left">
+  <div class="sec">
+    <div class="sec-title">PRIMORDIAL</div>
+    <div class="row"><span>Tick:</span><span id="tick">0</span></div>
+    <div class="row"><span>Moléculas:</span><span id="mol-count">0</span></div>
+    <div class="row"><span>Reacciones:</span><span id="reactions">0</span></div>
+    <div class="row"><span>Degradadas:</span><span id="degraded">0</span></div>
+    <div class="event-ind" id="events"></div>
+  </div>
+  <div class="sec">
+    <div class="sec-title">MOLÉCULAS</div>
+    <div id="mol-list"></div>
+  </div>
+  <div class="sec">
+    <div class="sec-title">COMPARTIMENTOS</div>
+    <div id="comp-list">Ninguno</div>
+  </div>
+  <div class="sec">
+    <div class="sec-title">CONTROLES</div>
+    <div class="slider-g"><label><span>Temperatura</span><span id="v-temp">55°C</span></label>
+      <input type="range" min="0" max="100" value="55" step="1" id="s-temp"></div>
+    <div class="slider-g"><label><span>pH</span><span id="v-ph">7.0</span></label>
+      <input type="range" min="0" max="14" value="7" step="0.1" id="s-ph"></div>
+    <div class="slider-g"><label><span>Hidratación</span><span id="v-hyd">65%</span></label>
+      <input type="range" min="0" max="100" value="65" step="1" id="s-hyd"></div>
+    <div style="margin-top:6px">
+      <button id="btn-uv">⚡ UV Flash</button>
+      <button id="btn-vent">🌋 Fumarola</button>
+    </div>
+    <div style="margin-top:6px">
+      <button id="btn-pause">⏸ Pausa</button>
+      <button id="btn-reset">↺ Reiniciar</button>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-title">PROGRESO <span id="prog-pct">0%</span></div>
+    <div class="prog-bg"><div class="prog-fill" id="prog-bar" style="width:0%"></div></div>
+    <div id="milestones"></div>
+  </div>
+  <div class="sec">
+    <div class="sec-title">LOG</div>
+    <div id="log"></div>
+  </div>
+</div>
+<div id="right">
+  <canvas id="cv"></canvas>
+</div>
+
+<script>
+// ============================================================
+// DATOS (embebidos desde science-params.json)
+// ============================================================
+const MOL_DEFS={
+  CH4:{label:"CH₄",r:6,mass:16,phase:"gas",energy:2,color:"#86efac"},
+  NH3:{label:"NH₃",r:6,mass:17,phase:"gas",energy:2,color:"#fdba74"},
+  CO2:{label:"CO₂",r:6,mass:44,phase:"gas",energy:1,color:"#94a3b8"},
+  H2S:{label:"H₂S",r:6,mass:34,phase:"gas",energy:2,color:"#fde68a"},
+  HCN:{label:"HCN",r:7,mass:27,phase:"gas",energy:3,color:"#f9a8d4"},
+  FORMAMID:{label:"FMD",r:7,mass:45,phase:"gas",energy:3,color:"#fcd34d"},
+  H2O:{label:"H₂O",r:5,mass:18,phase:"liquid",energy:1,color:"#60a5fa"},
+  AMINO:{label:"AA",r:9,mass:110,phase:"liquid",energy:5,color:"#a78bfa"},
+  BASE:{label:"BAS",r:8,mass:120,phase:"liquid",energy:4,color:"#67e8f9"},
+  RIBOSA:{label:"RIB",r:8,mass:150,phase:"liquid",energy:3,color:"#c4b5fd"},
+  NUCLEOSID:{label:"NSI",r:9,mass:270,phase:"liquid",energy:4,color:"#a5b4fc"},
+  NMP:{label:"NMP",r:10,mass:370,phase:"liquid",energy:6,color:"#818cf8"},
+  LIPID:{label:"LIP",r:10,mass:280,phase:"liquid",energy:4,color:"#fbbf24"},
+  PEPTID:{label:"PEP",r:11,mass:220,phase:"liquid",energy:7,color:"#e879f9"},
+  RNA:{label:"ARN",r:13,mass:500,phase:"liquid",energy:9,color:"#34d399"},
+  ATP:{label:"ATP",r:11,mass:507,phase:"liquid",energy:8,color:"#f97316"},
+  FE2:{label:"Fe²⁺",r:8,mass:56,phase:"solid",energy:3,color:"#fb923c"},
+  PO4:{label:"PO₄",r:8,mass:95,phase:"solid",energy:3,color:"#4ade80"}
+};
+const INIT_COUNTS={H2O:28,CH4:12,NH3:10,CO2:8,H2S:8,HCN:0,FORMAMID:0,AMINO:0,BASE:0,RIBOSA:0,NUCLEOSID:0,NMP:0,LIPID:0,PEPTID:0,RNA:0,ATP:0,FE2:3,PO4:3};
+const REACTIONS=[
+  {id:"CH4_NH3_to_HCN",a:"CH4",b:"NH3",prod:"HCN",chance:.015,minT:40,uv:true},
+  {id:"HCN_HCN_to_FORMAMID",a:"HCN",b:"HCN",prod:"FORMAMID",chance:.012,minT:40,uv:false},
+  {id:"HCN_H2O_to_AMINO",a:"HCN",b:"H2O",prod:"AMINO",chance:.012,minT:30,uv:false},
+  {id:"HCN_H2O_to_BASE",a:"HCN",b:"H2O",prod:"BASE",chance:.010,minT:25,uv:false},
+  {id:"NH3_H2O_to_AMINO",a:"NH3",b:"H2O",prod:"AMINO",chance:.008,minT:35,uv:false},
+  {id:"CO2_H2S_to_LIPID",a:"CO2",b:"H2S",prod:"LIPID",chance:.009,minT:20,uv:false},
+  {id:"FORMAMID_H2O_to_BASE",a:"FORMAMID",b:"H2O",prod:"BASE",chance:.010,minT:35,uv:false},
+  {id:"FORMAMID_HCN_to_BASE",a:"FORMAMID",b:"HCN",prod:"BASE",chance:.009,minT:40,uv:false},
+  {id:"AMINO_AMINO_to_PEPTID",a:"AMINO",b:"AMINO",prod:"PEPTID",chance:.009,minT:45,uv:false},
+  {id:"AMINO_PO4_to_RIBOSA",a:"AMINO",b:"PO4",prod:"RIBOSA",chance:.009,minT:35,uv:false},
+  {id:"BASE_RIBOSA_to_NUCLEOSID",a:"BASE",b:"RIBOSA",prod:"NUCLEOSID",chance:.010,minT:40,uv:false},
+  {id:"NUCLEOSID_PO4_to_NMP",a:"NUCLEOSID",b:"PO4",prod:"NMP",chance:.010,minT:35,uv:false},
+  {id:"NMP_NMP_to_RNA",a:"NMP",b:"NMP",prod:"RNA",chance:.008,minT:50,uv:false},
+  {id:"NMP_PO4_to_ATP",a:"NMP",b:"PO4",prod:"ATP",chance:.008,minT:45,uv:false}
+];
+const VESICLE={minLipids:6,vesicleMin:10,detectR:60,captureR:80,detectEvery:30,maxComp:5,
+  boostVesicle:3,boostProtocell:10,
+  perm:{H2O:1,HCN:.8,NH3:.8,AMINO:.04,NUCLEOSID:.03,NMP:.02,ATP:.02,RNA:0,LIPID:1,FE2:.01,PO4:.01}};
+const REACT_RADIUS=14,MAX_REACT_TICK=3,DEGRADATION_BASE=.002;
+
+// ============================================================
+// ESTADO
+// ============================================================
+let molecules=[],nextUid=1,tick=0,paused=false;
+let temp=55,ph=7,hydration=.65,energyFlux=.4;
+let uvActive=false,uvTicks=0,ventActive=false,ventTicks=0,ventBoost=0;
+let compartments=[],compNextUid=1;
+let stats={reactions:0,degraded:0,encapsulations:0};
+let milestones={concentration:false,polymer:false,compartment:false,metabolic:false,protocell:false};
+const W=1920,H=1080;
+
+function rnd(a=0,b=1){return a+(b-a)*Math.random()}
+function spawn(type,count,area){
+  const d=MOL_DEFS[type]||{};
+  for(let i=0;i<count;i++){
+    molecules.push({
+      uid:nextUid++,type,
+      x:rnd(area?area[0]:0,area?area[2]:W),y:rnd(area?area[1]:0,area?area[3]:H),
+      vx:rnd(-.8,.8),vy:rnd(-.8,.8),
+      energy:d.energy||1,stability:1,hydrated:true,age:0,boundTo:null,reactive:true,destroy:false
+    });
+  }
+}
+function init(){
+  molecules=[];nextUid=1;tick=0;compartments=[];compNextUid=1;
+  stats={reactions:0,degraded:0,encapsulations:0};
+  milestones={concentration:false,polymer:false,compartment:false,metabolic:false,protocell:false};
+  uvActive=false;uvTicks=0;ventActive=false;ventTicks=0;ventBoost=0;
+  for(const[t,c]of Object.entries(INIT_COUNTS)){if(c>0)spawn(t,c);}
+  addLog("Simulación iniciada");
+}
+
+// ============================================================
+// SIMULACIÓN
+// ============================================================
+function simTick(){
+  if(paused)return;
+  tick++;
+  let reactionsThisTick=0;
+  // UV/Vent timers
+  if(uvTicks>0){uvTicks--;if(uvTicks<=0)uvActive=false;}
+  if(ventTicks>0){ventTicks--;if(ventTicks<=0){temp-=ventBoost;ventBoost=0;ventActive=false;}}
+  // Motion
+  const diffBase=12,tFac=Math.min(Math.max(temp/40,.2),3),hFac=Math.min(Math.max(hydration+.2,.05),1.5);
+  for(const m of molecules){
+    m.vx+=rnd(-1,1)*diffBase*tFac*.001;
+    m.vy+=rnd(-1,1)*diffBase*hFac*.001;
+    m.vx*=.985;m.vy*=.985;
+    m.x+=m.vx;m.y+=m.vy;m.age+=.1;
+    if(m.x<0){m.x=0;m.vx*=-.6;}if(m.x>W){m.x=W;m.vx*=-.6;}
+    if(m.y<0){m.y=0;m.vy*=-.6;}if(m.y>H){m.y=H;m.vy*=-.6;}
+  }
+  // Degradation
+  const dryPen=Math.max(0,.4-hydration),heatPen=Math.max(0,temp-55)*.00015;
+  for(const m of molecules){
+    if(Math.random()<DEGRADATION_BASE+dryPen*.004+heatPen){
+      m.stability-=rnd(.03,.08);stats.degraded++;
+    }
+    m.energy+=energyFlux*.00005;m.energy=Math.min(m.energy,5);
+    m.hydrated=hydration>.25;
+  }
+  // Reactions
+  const rr2=REACT_RADIUS*REACT_RADIUS;
+  for(let i=0;i<molecules.length&&reactionsThisTick<MAX_REACT_TICK;i++){
+    const a=molecules[i];if(!a.reactive||a.destroy)continue;
+    for(let j=i+1;j<molecules.length&&reactionsThisTick<MAX_REACT_TICK;j++){
+      const b=molecules[j];if(!b.reactive||b.destroy)continue;
+      const dx=a.x-b.x,dy=a.y-b.y;
+      if(dx*dx+dy*dy>rr2)continue;
+      for(const rx of REACTIONS){
+        if((rx.a===a.type&&rx.b===b.type)||(rx.a===b.type&&rx.b===a.type)){
+          if(temp<rx.minT)continue;
+          if(rx.uv&&!uvActive)continue;
+          let ch=rx.chance+(temp/120)*.01;
+          ch*=ph>=6?1.2:ph>=5?.9:.6;
+          if(uvActive)ch*=1.8;
+          const pos=[(a.x+b.x)/2,(a.y+b.y)/2];
+          ch*=getCompBoost(pos[0],pos[1]);
+          if(Math.random()<ch){
+            a.destroy=true;b.destroy=true;
+            spawn(rx.prod,1,[pos[0]-5,pos[1]-5,pos[0]+5,pos[1]+5]);
+            stats.reactions++;reactionsThisTick++;
+            break;
+          }
+        }
+      }
+    }
+  }
+  // Cleanup
+  molecules=molecules.filter(m=>!m.destroy&&m.stability>0);
+  // Compartments
+  if(tick%VESICLE.detectEvery===0)detectCompartments();
+  updateCompartmentContents();
+  checkProtocell();
+  // Milestones
+  checkMilestones();
+}
+
+// ============================================================
+// COMPARTIMENTOS
+// ============================================================
+function detectCompartments(){
+  if(compartments.length>=VESICLE.maxComp)return;
+  const free=molecules.filter(m=>m.type==="LIPID"&&!m.boundTo);
+  if(free.length<VESICLE.minLipids)return;
+  const used=new Set();
+  for(let i=0;i<free.length;i++){
+    if(used.has(i))continue;
+    const cluster=[free[i]];used.add(i);
+    for(let j=i+1;j<free.length;j++){
+      if(used.has(j))continue;
+      const dx=free[i].x-free[j].x,dy=free[i].y-free[j].y;
+      if(dx*dx+dy*dy<=VESICLE.detectR*VESICLE.detectR){cluster.push(free[j]);used.add(j);}
+    }
+    if(cluster.length<VESICLE.minLipids)continue;
+    let cx=0,cy=0;cluster.forEach(m=>{cx+=m.x;cy+=m.y});
+    cx/=cluster.length;cy/=cluster.length;
+    const type=cluster.length>=VESICLE.vesicleMin?"vesicle":"micelle";
+    const comp={uid:compNextUid++,type,x:cx,y:cy,lipids:cluster.length,contents:[],age:0};
+    cluster.forEach(m=>{m.boundTo=comp.uid});
+    compartments.push(comp);stats.encapsulations++;
+    addLog(`${type} formada (${cluster.length} lípidos)`);
+    milestones.compartment=true;
+    break;
+  }
+}
+function updateCompartmentContents(){
+  const r2=VESICLE.captureR*VESICLE.captureR;
+  for(const c of compartments){
+    c.age++;
+    for(const m of molecules){
+      if(m.boundTo||c.contents.includes(m.uid))continue;
+      const dx=c.x-m.x,dy=c.y-m.y;
+      if(dx*dx+dy*dy>r2)continue;
+      const p=VESICLE.perm[m.type];
+      if(p!==undefined&&p>0&&Math.random()<p){c.contents.push(m.uid);m.boundTo=c.uid;}
+    }
+  }
+}
+function checkProtocell(){
+  for(const c of compartments){
+    if(c.type==="protocell")continue;
+    if(c.type!=="vesicle")continue;
+    for(const uid of c.contents){
+      const m=molecules.find(x=>x.uid===uid);
+      if(m&&m.type==="RNA"){
+        c.type="protocell";milestones.protocell=true;
+        addLog("¡¡¡ PROTOCÉLULA EMERGENTE !!!");break;
+      }
+    }
+  }
+}
+function getCompBoost(x,y){
+  const r2=VESICLE.captureR*VESICLE.captureR;
+  for(const c of compartments){
+    const dx=c.x-x,dy=c.y-y;
+    if(dx*dx+dy*dy<=r2){
+      if(c.type==="protocell")return VESICLE.boostProtocell;
+      if(c.type==="vesicle")return VESICLE.boostVesicle;
+    }
+  }
+  return 1;
+}
+
+// ============================================================
+// MILESTONES
+// ============================================================
+function checkMilestones(){
+  const ct=countByType();
+  if(!milestones.concentration){
+    for(const t of["AMINO","BASE","LIPID","NMP","NUCLEOSID"])
+      if((ct[t]||0)>=5){milestones.concentration=true;addLog("Milestone: Concentración alcanzada");break;}
+  }
+  if(!milestones.polymer&&((ct.PEPTID||0)>=1||(ct.RNA||0)>=1)){
+    milestones.polymer=true;addLog("Milestone: Polímero detectado");
+  }
+  if(!milestones.metabolic&&(ct.ATP||0)>=1){
+    milestones.metabolic=true;addLog("Milestone: Ciclo metabólico (ATP)");
+  }
+}
+function countByType(){
+  const c={};molecules.forEach(m=>{c[m.type]=(c[m.type]||0)+1});return c;
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+const cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+let scaleX=1,scaleY=1;
+function resize(){
+  cv.width=cv.clientWidth;cv.height=cv.clientHeight;
+  scaleX=cv.width/W;scaleY=cv.height/H;
+}
+window.addEventListener("resize",resize);
+
+function render(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  // Compartments
+  for(const c of compartments){
+    const sx=c.x*scaleX,sy=c.y*scaleY,sr=VESICLE.captureR*scaleX;
+    ctx.beginPath();ctx.arc(sx,sy,sr,0,Math.PI*2);
+    if(c.type==="protocell"){ctx.fillStyle="rgba(255,220,40,.08)";ctx.strokeStyle="rgba(255,200,20,.6)";}
+    else if(c.type==="vesicle"){ctx.fillStyle="rgba(80,180,255,.05)";ctx.strokeStyle="rgba(80,180,255,.4)";}
+    else{ctx.fillStyle="rgba(180,180,80,.03)";ctx.strokeStyle="rgba(180,180,80,.3)";}
+    ctx.fill();ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle=ctx.strokeStyle;ctx.font="10px monospace";
+    ctx.fillText(c.type.toUpperCase(),sx-20,sy-sr-4);
+  }
+  // Molecules
+  for(const m of molecules){
+    const d=MOL_DEFS[m.type];if(!d)continue;
+    const sx=m.x*scaleX,sy=m.y*scaleY,sr=Math.max(d.r*scaleX,2);
+    ctx.beginPath();ctx.arc(sx,sy,sr,0,Math.PI*2);
+    ctx.globalAlpha=Math.max(m.stability,.3);
+    ctx.fillStyle=m.boundTo?lighten(d.color,.3):d.color;
+    ctx.fill();ctx.globalAlpha=1;
+  }
+  // UV overlay
+  if(uvActive){ctx.fillStyle="rgba(180,120,255,.06)";ctx.fillRect(0,0,cv.width,cv.height);}
+  if(ventActive){ctx.fillStyle="rgba(255,100,30,.04)";ctx.fillRect(0,0,cv.width,cv.height);}
+}
+function lighten(hex,amt){
+  let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  r=Math.min(255,r+amt*255);g=Math.min(255,g+amt*255);b=Math.min(255,b+amt*255);
+  return `rgb(${r|0},${g|0},${b|0})`;
+}
+
+// ============================================================
+// UI
+// ============================================================
+function updateUI(){
+  document.getElementById("tick").textContent=tick;
+  document.getElementById("mol-count").textContent=molecules.length;
+  document.getElementById("reactions").textContent=stats.reactions;
+  document.getElementById("degraded").textContent=stats.degraded;
+  // Molecules list
+  const ct=countByType(),keys=Object.keys(ct).sort((a,b)=>ct[b]-ct[a]);
+  document.getElementById("mol-list").innerHTML=keys.map(t=>
+    `<div class="row"><span style="color:${MOL_DEFS[t]?.color||'#fff'}">${MOL_DEFS[t]?.label||t}</span><span>${ct[t]}</span></div>`
+  ).join("");
+  // Compartments
+  const mic=compartments.filter(c=>c.type==="micelle").length;
+  const ves=compartments.filter(c=>c.type==="vesicle").length;
+  const pro=compartments.filter(c=>c.type==="protocell").length;
+  document.getElementById("comp-list").innerHTML=
+    compartments.length===0?"Ninguno":`Micelas: ${mic}  Vesículas: ${ves}  Protocélulas: ${pro}`;
+  // Events
+  const ev=[];
+  if(uvActive)ev.push(`⚡ UV (${uvTicks})`);
+  if(ventActive)ev.push(`🌋 Fumarola (${ventTicks})`);
+  document.getElementById("events").textContent=ev.join("  ");
+  // Milestones
+  const ms=[
+    ["concentration","Concentración molecular"],
+    ["polymer","Polímero detectado"],
+    ["compartment","Compartimento formado"],
+    ["metabolic","Ciclo metabólico (ATP)"],
+    ["protocell","PROTOCÉLULA"]
+  ];
+  const done=ms.filter(([k])=>milestones[k]).length;
+  const pct=Math.round(done/ms.length*100);
+  document.getElementById("prog-pct").textContent=pct+"%";
+  document.getElementById("prog-bar").style.width=pct+"%";
+  document.getElementById("milestones").innerHTML=ms.map(([k,l])=>
+    `<div class="milestone ${milestones[k]?"done":"pending"}">${milestones[k]?"✓":"○"} ${l}</div>`
+  ).join("");
+}
+
+const logEl=document.getElementById("log");
+function addLog(msg){
+  const d=document.createElement("div");d.className="log-entry";
+  d.textContent=`[${tick}] ${msg}`;logEl.prepend(d);
+  while(logEl.children.length>20)logEl.lastChild.remove();
+}
+
+// Controls
+document.getElementById("s-temp").addEventListener("input",e=>{
+  temp=+e.target.value;document.getElementById("v-temp").textContent=temp+"°C";});
+document.getElementById("s-ph").addEventListener("input",e=>{
+  ph=+e.target.value;document.getElementById("v-ph").textContent=ph.toFixed(1);});
+document.getElementById("s-hyd").addEventListener("input",e=>{
+  hydration=e.target.value/100;document.getElementById("v-hyd").textContent=Math.round(hydration*100)+"%";});
+document.getElementById("btn-uv").addEventListener("click",()=>{
+  uvActive=true;uvTicks=25;addLog("⚡ UV Flash activado");});
+document.getElementById("btn-vent").addEventListener("click",()=>{
+  if(ventActive)return;ventActive=true;ventTicks=240;ventBoost=12;temp+=12;
+  spawn("H2S",4);spawn("FE2",2);addLog("🌋 Fumarola activada");
+  document.getElementById("s-temp").value=temp;document.getElementById("v-temp").textContent=temp+"°C";
+});
+document.getElementById("btn-pause").addEventListener("click",()=>{
+  paused=!paused;document.getElementById("btn-pause").textContent=paused?"▶ Reanudar":"⏸ Pausa";
+  document.getElementById("btn-pause").classList.toggle("active",paused);
+});
+document.getElementById("btn-reset").addEventListener("click",()=>{
+  init();document.getElementById("s-temp").value=55;document.getElementById("v-temp").textContent="55°C";
+  document.getElementById("s-ph").value=7;document.getElementById("v-ph").textContent="7.0";
+  document.getElementById("s-hyd").value=65;document.getElementById("v-hyd").textContent="65%";
+});
+
+// ============================================================
+// GAME LOOP
+// ============================================================
+let lastTick=0;const TICK_MS=100;
+function loop(ts){
+  requestAnimationFrame(loop);
+  if(ts-lastTick>=TICK_MS){simTick();lastTick=ts;}
+  render();updateUI();
+}
+resize();init();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
