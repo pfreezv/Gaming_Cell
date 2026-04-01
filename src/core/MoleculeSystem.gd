@@ -82,6 +82,8 @@ func _build_molecule(type: String, area: Rect2) -> Dictionary:
 	return molecule
 
 func tick(delta: float) -> void:
+	_begin_tick_metrics()
+
 	if molecules.is_empty():
 		return
 
@@ -89,6 +91,10 @@ func tick(delta: float) -> void:
 	_apply_environmental_effects(delta)
 	_detect_reaction_candidates()
 	_cleanup_destroyed()
+
+func _begin_tick_metrics() -> void:
+	GameState.telemetry["reaction_candidates_last_tick"] = 0
+	GameState.telemetry["reactions_success_last_tick"] = 0
 
 func _update_motion(delta: float) -> void:
 	var diffusion_base = config.get("environment", {}).get("diffusion_base", 12.0)
@@ -146,6 +152,7 @@ func _detect_reaction_candidates() -> void:
 	var reaction_radius = config.get("environment", {}).get("reaction_radius", 14.0)
 	var reaction_radius_sq = reaction_radius * reaction_radius
 	var total = molecules.size()
+	var candidates_detected := 0
 
 	for i in range(total):
 		var a = molecules[i]
@@ -162,6 +169,7 @@ func _detect_reaction_candidates() -> void:
 			var dist_sq = dx * dx + dy * dy
 
 			if dist_sq <= reaction_radius_sq:
+				candidates_detected += 1
 				var candidate = {
 					"a_uid": a.uid,
 					"b_uid": b.uid,
@@ -173,6 +181,8 @@ func _detect_reaction_candidates() -> void:
 					"energy_flux": GameState.energy_flux
 				}
 				emit_signal("reaction_candidate_detected", candidate)
+
+	GameState.telemetry["reaction_candidates_last_tick"] = candidates_detected
 
 func consume_pair(uid_a: int, uid_b: int) -> void:
 	_mark_destroy(uid_a)
@@ -201,6 +211,7 @@ func spawn_reaction_result(type: String, position: Vector2, inherited_energy: fl
 	molecules.append(molecule)
 	GameState.molecule_instances.append(molecule)
 	GameState.telemetry["total_reactions"] += 1
+	GameState.telemetry["reactions_success_last_tick"] += 1
 	emit_signal("molecule_spawned", type, position)
 
 func _mark_destroy(uid: int) -> void:

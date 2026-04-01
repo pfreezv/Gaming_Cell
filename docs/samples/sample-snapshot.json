@@ -1,0 +1,41 @@
+{
+  "schema_version": "sim.v1",
+  "run_id": "run-demo-001",
+  "tick": 240,
+  "time_sec": 120.0,
+  "environment": {
+    "temperature": 47.5,
+    "ph": 7.2,
+    "hydration": 0.62,
+    "energy_flux": 0.48
+  },
+  "molecules": {
+    "total": 420,
+    "by_type": {
+      "WATER": 180,
+      "AA": 92,
+      "LIPID": 74,
+      "NMP": 44,
+      "MINERAL": 30
+    }
+  },
+  "reactions": {
+    "candidates_last_tick": 88,
+    "success_last_tick": 16,
+    "success_total": 329,
+    "failed_total": 97
+  },
+  "progress": {
+    "score": 0.41,
+    "milestones": {
+      "concentration_threshold_reached": true,
+      "polymer_detected": false,
+      "compartment_formed": false,
+      "metabolic_cycle_detected": false,
+      "proto_cell_emerged": false
+    }
+  },
+  "extra": {
+    "source": "sample"
+  }
+}
