@@ -13,6 +13,7 @@ var render_area := Rect2(310.0, 10.0, 950.0, 600.0)
 ## Tablas de visualización cargadas desde JSON
 var _mol_colors: Dictionary = {}   ## type → Color
 var _mol_radii:  Dictionary = {}   ## type → float (px en espacio mundo)
+var _mol_textures: Dictionary = {} ## type → Texture2D (sprite PNG)
 
 ## Factor de escala mundo→pantalla
 var _scale := Vector2.ONE
@@ -20,6 +21,9 @@ var _scale := Vector2.ONE
 ## Color de fondo del área de simulación
 const BG_COLOR       := Color(0.04, 0.06, 0.10)
 const BORDER_COLOR   := Color(0.2,  0.3,  0.4, 0.6)
+
+## Ruta base de sprites
+const SPRITE_BASE_PATH := "res://assets/sprites/molecules/"
 
 # ──────────────────────────────────────────────
 # CICLO DE VIDA
@@ -42,8 +46,13 @@ func _load_visuals() -> void:
 		_mol_colors[mol_type] = Color(color_str)
 		_mol_radii[mol_type]  = float(def.get("r", 6))
 
+		## Cargar sprite PNG si existe
+		var sprite_path := SPRITE_BASE_PATH + "mol_%s.png" % mol_type
+		if ResourceLoader.exists(sprite_path):
+			_mol_textures[mol_type] = load(sprite_path)
+
 	_recalculate_scale()
-	print("[SimRenderer] Visuals cargados: %d tipos de molécula" % _mol_colors.size())
+	print("[SimRenderer] Visuals cargados: %d tipos, %d sprites" % [_mol_colors.size(), _mol_textures.size()])
 
 func _recalculate_scale() -> void:
 	var world := MoleculeSystem.world_size
@@ -89,7 +98,19 @@ func _draw_molecules() -> void:
 		var stability: float = m.get("stability", 1.0)
 		color.a = clampf(stability, 0.3, 1.0)
 
-		draw_circle(pos, r, color)
+		## Dibujar sprite si disponible, sino fallback a círculo
+		var tex: Texture2D = _mol_textures.get(m.type)
+		if tex:
+			var draw_size := r * 4.0
+			var rect := Rect2(pos - Vector2(draw_size, draw_size) * 0.5, Vector2(draw_size, draw_size))
+			draw_texture_rect(tex, rect, false, color)
+			## Glow extra si está encapsulada
+			if m.get("bound_to") != null:
+				var glow_color := Color(color.r, color.g, color.b, 0.15)
+				var glow_rect := Rect2(pos - Vector2(draw_size, draw_size) * 0.65, Vector2(draw_size, draw_size) * 1.3)
+				draw_texture_rect(tex, glow_rect, false, glow_color)
+		else:
+			draw_circle(pos, r, color)
 
 func _draw_compartments() -> void:
 	var cap_r: float = GameState.science_params \
